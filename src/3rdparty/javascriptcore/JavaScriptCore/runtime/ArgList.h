@@ -122,18 +122,18 @@ namespace JSC {
         }
 
         void removeLast()
-        { 
+        {
             ASSERT(m_size);
             m_size--;
             m_vector.removeLast();
         }
 
-        JSValue last() 
+        JSValue last()
         {
             ASSERT(m_size);
             return m_buffer[m_size - 1].jsValue();
         }
-        
+
         iterator begin() { return m_buffer; }
         iterator end() { return m_buffer + m_size; }
 
@@ -144,7 +144,7 @@ namespace JSC {
 
     private:
         void slowAppend(JSValue);
-        
+
         Register* m_buffer;
         size_t m_size;
         bool m_isUsingInlineBuffer;
@@ -158,7 +158,7 @@ namespace JSC {
     private:
         // Prohibits new / delete, which would break GC.
         friend class JSGlobalData;
-        
+
         void* operator new(size_t size)
         {
             return fastMalloc(size);
@@ -172,7 +172,10 @@ namespace JSC {
         void operator delete[](void*);
 
         void* operator new(size_t, void*);
+        // FIXME: strange magic
+        #if !(defined(_MSC_VER) && (_MSC_VER >= 1900))
         void operator delete(void*, size_t);
+        #endif
     };
 
     class ArgList {
@@ -186,7 +189,7 @@ namespace JSC {
             , m_argCount(0)
         {
         }
-        
+
         ArgList(JSValue* args, unsigned argCount)
             : m_args(args)
             , m_argCount(argCount)
@@ -196,7 +199,7 @@ namespace JSC {
                 ASSERT(!m_args[i].isZombie());
 #endif
         }
-        
+
         ArgList(Register* args, int argCount)
             : m_args(reinterpret_cast<JSValue*>(args))
             , m_argCount(argCount)
@@ -220,10 +223,10 @@ namespace JSC {
         bool isEmpty() const { return !m_argCount; }
 
         size_t size() const { return m_argCount; }
-        
+
         iterator begin() { return m_args; }
         iterator end() { return m_args + m_argCount; }
-        
+
         const_iterator begin() const { return m_args; }
         const_iterator end() const { return m_args + m_argCount; }
 

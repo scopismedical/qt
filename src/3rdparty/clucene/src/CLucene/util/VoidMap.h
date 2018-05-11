@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_util_VoidMap_
@@ -18,7 +18,7 @@ CL_NS_DEF(util)
 * A template to encapsulate various map type classes
 * @internal
 */
-template<typename _kt, typename _vt, 
+template<typename _kt, typename _vt,
 	typename base,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
@@ -77,27 +77,27 @@ public:
 		//cases where map is not unique!!!
 		if ( dk || dv )
 			remove(k);
-			
+
 		//todo: replacing the old item might be quicker...
-		
+
 		base::insert(_pair(k,v));
 	}
 
-	
+
 	///using a non-const key, get a non-const value
 	_vt get( _kt k) const {
 		const_iterator itr = base::find(k);
-		if ( itr==base::end() ) 
+		if ( itr==base::end() )
 			return _vt();
-		else 
+		else
 			return itr->second;
 	}
 	///using a non-const key, get the actual key
 	_kt getKey( _kt k) const {
 		const_iterator itr = base::find(k);
-		if ( itr==base::end() ) 
+		if ( itr==base::end() )
 			return _kt();
-		else 
+		else
 			return itr->first;
 	}
 
@@ -106,11 +106,11 @@ public:
 		_kt key = itr->first;
 		_vt val = itr->second;
 		base::erase(itr);
-		
+
 		//keys & vals need to be deleted after erase, because the hashvalue is still needed
-		if ( dk && !dontDeleteKey ) 
+		if ( dk && !dontDeleteKey )
 			_KeyDeletor::doDelete(key);
-		if ( dv && !dontDeleteValue ) 
+		if ( dv && !dontDeleteValue )
 			_ValueDeletor::doDelete(val);
 	}
 	///delete and optionally delete the specified key and associated value
@@ -130,12 +130,12 @@ public:
 				itr = base::begin();
 
 				#else
-				if ( dk ) 
+				if ( dk )
 					_KeyDeletor::doDelete(itr->first);
-				if ( dv ) 
+				if ( dv )
 					_ValueDeletor::doDelete(itr->second);
 				++itr;
-				
+
 				#endif
 			}
 		}
@@ -152,7 +152,7 @@ public:
 #elif defined(LUCENE_DISABLE_HASHING)
 
  //a CLSet with CLHashMap traits
-template<typename _kt, typename _vt, 
+template<typename _kt, typename _vt,
 	typename _Compare,
 	typename _EqualDummy,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
@@ -217,17 +217,28 @@ public:
 
 //A collection that contains no duplicates
 //does not guarantee that the order will remain constant over time
-template<typename _kt, typename _vt, 
+// MSVC2015: https://codereview.qt-project.org/#/c/110682/3//ALL,unified
+template<typename _kt, typename _vt,
 	typename _Compare,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLSet:public __CLMap<_kt,_vt,
-	CL_NS_STD(map)<_kt,_vt, _Compare>,
+#if (defined(_MSC_VER) && (_MSC_VER >= 1900))
+  CL_NS_STD(map)<_kt,_vt>,
+#else
+  CL_NS_STD(map)<_kt,_vt, _Compare>,
+#endif
 	_KeyDeletor,_ValueDeletor>
 {
+#if (defined(_MSC_VER) && (_MSC_VER >= 1900))
+  typedef typename CL_NS_STD(map)<_kt,_vt> _base;
+  typedef __CLMap<_kt, _vt, CL_NS_STD(map)<_kt,_vt>,
+    _KeyDeletor,_ValueDeletor> _this;
+#else
 	typedef typename CL_NS_STD(map)<_kt,_vt,_Compare> _base;
 	typedef __CLMap<_kt, _vt, CL_NS_STD(map)<_kt,_vt, _Compare>,
 		_KeyDeletor,_ValueDeletor> _this;
+#endif
 public:
 	CLSet ( const bool deleteKey=false, const bool deleteValue=false )
 	{
